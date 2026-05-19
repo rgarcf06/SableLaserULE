@@ -1,0 +1,3 @@
+DFPlayer Mini Mp3 by Makuna @ 1.2.3
+Adafruit NeoPixel @ 1.15.4
+DFRobot_BMI160 @ 1.0.0
