@@ -72,7 +72,7 @@ void leerBotones() {
     if (digitalRead(PIN_BTN_ON) == LOW) {
       if (!sable.estaEncendido()) {
         sonido.reproducirForzado(SND_ENCENDIDO);
-        delay(400);
+        delay(200); // Pequeño retardo para sincronizar con el módulo de sonido
         sable.toggleEncendido();
       } else {
         sable.toggleEncendido();
@@ -100,10 +100,10 @@ void gestionarIMU() {
 
   switch (estado) {
     case IMU_GOLPE:
-      if ((ahora - ultimoGolpe) >= COOLDOWN_GOLPE_MS && !sable.estaAnimando()) {  // ← añadir !sable.estaAnimando()
+      if ((ahora - ultimoGolpe) >= COOLDOWN_GOLPE_MS && !sable.estaAnimando()) {
         ultimoGolpe = ahora;
-        sable.golpe();
         sonido.reproducirForzado(SND_GOLPE);
+        sable.golpe();
     }
     break;
     case IMU_MOVIMIENTO:

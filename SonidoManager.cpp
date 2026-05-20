@@ -21,11 +21,16 @@ void SonidoManager::setDuracionReposo(uint32_t ms) {
 }
 
 void SonidoManager::reproducir(uint8_t track) {
-  bool reproduciendo = estaReproduciendo();
   uint32_t ahora = millis();
+  bool reproduciendo = estaReproduciendo();
 
-  if (_trackActual == track) {
-    // Relanzar por timer (50ms antes de que acabe) o por PIN_BUSY
+  if (_trackActual != track) {
+    // Interrumpir inmediatamente para nuevo sonido (ej: de reposo a movimiento)
+    _trackActual = track;
+    _inicioReproduccion = ahora;
+    _dfPlayer.playMp3FolderTrack(track);
+  } else {
+    // Es el mismo track: solo relanzar si ha terminado
     bool porTimer = (_duracionReposo > 0 && 
                      (ahora - _inicioReproduccion) >= (_duracionReposo - 50));
     bool porPin   = (_estabaReproduciendo && !reproduciendo);
@@ -34,10 +39,6 @@ void SonidoManager::reproducir(uint8_t track) {
       _inicioReproduccion = ahora;
       _dfPlayer.playMp3FolderTrack(track);
     }
-  } else if (!reproduciendo) {
-    _trackActual = track;
-    _inicioReproduccion = ahora;
-    _dfPlayer.playMp3FolderTrack(track);
   }
 
   _estabaReproduciendo = reproduciendo;
