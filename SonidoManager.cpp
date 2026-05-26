@@ -1,4 +1,5 @@
 #include "SonidoManager.h"
+#include "SonidoManager.h"
 
 SonidoManager::SonidoManager(HardwareSerial& serial, uint8_t pinBusy)
   : _dfPlayer(serial, nullptr), _pinBusy(pinBusy) {}
@@ -16,7 +17,6 @@ void SonidoManager::loop() {
 }
 
 void SonidoManager::reproducirFondo(uint8_t track) {
-  // El módulo retoma solo al terminar el advert
   _dfPlayer.playMp3FolderTrack(track);
 }
 

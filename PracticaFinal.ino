@@ -14,6 +14,7 @@
 #define PIN_SDA         8
 #define PIN_SCL         9
 
+bool reanudarReposo = false;
 
 ColorSable        colorSable;
 SableLED          sable(PIN_STRIP, 80, 28);
@@ -58,6 +59,11 @@ void loop() {
   sable.update();
   leerBotones();
 
+  if (reanudarReposo) {
+    reanudarReposo = false;
+    sonido.reproducirFondo(SND_REPOSO);
+  }
+
   if (sable.estaEncendido()) {
     gestionarIMU();
   }
@@ -72,7 +78,7 @@ void leerBotones() {
     if (digitalRead(PIN_BTN_ON) == LOW) {
       if (!sable.estaEncendido()) {
         sonido.reproducirForzado(SND_ENCENDIDO);
-        delay(200); // Pequeño retardo para sincronizar con el módulo de sonido
+        delay(150);
         sable.toggleEncendido();
       } else {
         sable.toggleEncendido();

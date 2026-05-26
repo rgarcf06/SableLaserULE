@@ -8,12 +8,18 @@
 #define SND_APAGADO    4
 #define SND_ADVERT_GOLPE      5
 
+extern bool reanudarReposo;
+
 class Mp3Notify {
 public:
   typedef void* TargetType;
   static void SetTarget(TargetType) {}
   static void OnError(uint16_t errorCode) {}
-  static void OnPlayFinished(DfMp3_PlaySources source, uint16_t track) {}
+  static void OnPlayFinished(DfMp3_PlaySources source, uint16_t track) {
+    if (track == SND_ENCENDIDO || track == SND_APAGADO) {
+        reanudarReposo = true;
+    }
+  }
   static void OnPlaySourceOnline(DfMp3_PlaySources source) {}
   static void OnPlaySourceInserted(DfMp3_PlaySources source) {}
   static void OnPlaySourceRemoved(DfMp3_PlaySources source) {}
