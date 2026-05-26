@@ -2,6 +2,7 @@
 #include "SableLED.h"
 #include "SonidoManager.h"
 #include "MovimientoManager.h"
+#include "BLEManager.h"
 
 #define PIN_KEY         7
 #define PIN_BUSY        6
@@ -20,6 +21,7 @@ ColorSable        colorSable;
 SableLED          sable(PIN_STRIP, 80, 28);
 SonidoManager     sonido(Serial1, PIN_BUSY);
 MovimientoManager imu(PIN_SDA, PIN_SCL);
+BLEManager        ble;
 
 bool btnOnAnterior    = HIGH;
 bool btnColorAnterior = HIGH;
@@ -51,6 +53,8 @@ void setup() {
   
   sonido.reproducirFondo(SND_REPOSO);
   delay(200);
+
+  ble.begin("SableLaser");
 }
 
 void loop() {
@@ -67,6 +71,13 @@ void loop() {
   if (sable.estaEncendido()) {
     gestionarIMU();
   }
+
+  if (ble.hayColorNuevo()) {
+    uint8_t r, g, b;
+    ble.getRGB(r, g, b);
+    sable.setColor(Adafruit_NeoPixel::Color(r, g, b));
+  }
+
 }
 
 void leerBotones() {
