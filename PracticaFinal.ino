@@ -14,9 +14,6 @@
 #define PIN_SDA         8
 #define PIN_SCL         9
 
-uint32_t ultimoGolpe = 0;
-#define COOLDOWN_GOLPE_MS 250 
-
 
 ColorSable        colorSable;
 SableLED          sable(PIN_STRIP, 80, 28);
@@ -37,12 +34,12 @@ void setup() {
   pinMode(PIN_KEY,       OUTPUT);
   digitalWrite(PIN_KEY,  HIGH);
 
-  sonido.setDuracionReposo(6189);
 
   Serial1.begin(9600, SERIAL_8N1, PIN_DF_RX, PIN_DF_TX);
   delay(2000);
   sonido.begin(25);
-  delay(500);
+  delay(1000);
+
 
   sable.begin();
   sable.setColor(colorSable.getColor());
@@ -50,6 +47,9 @@ void setup() {
   if (!imu.begin()) {
     Serial.println("ERROR: IMU no detectada");
   }
+  
+  sonido.reproducirFondo(SND_REPOSO);
+  delay(200);
 }
 
 void loop() {
@@ -96,21 +96,19 @@ void leerBotones() {
 
 void gestionarIMU() {
   EstadoIMU estado = imu.getEstado();
-  uint32_t ahora = millis();
 
   switch (estado) {
     case IMU_GOLPE:
-      if ((ahora - ultimoGolpe) >= COOLDOWN_GOLPE_MS && !sable.estaAnimando()) {
-        ultimoGolpe = ahora;
-        sonido.reproducirForzado(SND_GOLPE);
+      if (!sable.estaAnimando()) {
+        sonido.reproducirAdvert(SND_ADVERT_GOLPE);
         sable.golpe();
-    }
-    break;
+      }
+      break;
     case IMU_MOVIMIENTO:
-      sonido.reproducir(SND_MOVIMIENTO);
+      sonido.reproducirAdvert(SND_ADVERT_MOVIMIENTO);
       break;
     case IMU_REPOSO:
-      sonido.reproducir(SND_REPOSO);
+      // no hace falta hacer nada, el /mp3 sigue en bucle
       break;
   }
 }
