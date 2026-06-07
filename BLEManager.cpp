@@ -3,6 +3,7 @@
 #include <BLEServer.h>
 #include <BLEUtils.h>
 #include <BLE2902.h>
+#include <esp_bt.h>
 
 static bool    _colorNuevo = false;
 static uint8_t _r = 0, _g = 0, _b = 255;
@@ -38,6 +39,11 @@ void BLEManager::begin(const char* nombre) {
   BLEDevice::deinit(true);
   delay(200);
   BLEDevice::init(nombre);
+
+  esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_N6);  // -6 dBm
+  esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_ADV,     ESP_PWR_LVL_N6);
+  esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_SCAN,    ESP_PWR_LVL_N6);
+
   BLEServer* server = BLEDevice::createServer();
   server->setCallbacks(new ServerCallbacks());
 

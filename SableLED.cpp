@@ -95,24 +95,26 @@ void SableLED::update() {
   int mitad = _strip.numPixels() / 2;
 
   if (_encendiendose) {
-    if (_pixelActual <= mitad) {
+    int paso = 4; // LEDs por step, sube este número para más velocidad
+    for (int i = 0; i < paso && _pixelActual <= mitad; i++) {
       _strip.setPixelColor(_pixelActual, _color);
       _strip.setPixelColor(_strip.numPixels() - 1 - _pixelActual, _color);
-      _strip.show();
       _pixelActual++;
+    }
+    _strip.show(); // Una sola llamada por step
     } else {
       _animando = false;
     }
-  } else {
-    if (_pixelActual <= mitad) {
-      _strip.setPixelColor(mitad - _pixelActual, 0);
-      _strip.setPixelColor(_strip.numPixels() - 1 - (mitad - _pixelActual), 0);
+   else {
+      int paso = 4;
+      for (int i = 0; i < paso && _pixelActual <= mitad; i++) {
+        _strip.setPixelColor(mitad - _pixelActual, 0);
+        _strip.setPixelColor(_strip.numPixels() - 1 - (mitad - _pixelActual), 0);
+        _pixelActual++;
+      }
       _strip.show();
-      _pixelActual++;
-    } else {
-      _animando = false;
-    }
-  }
+      }
+  
 }
 
 bool SableLED::estaAnimando() {

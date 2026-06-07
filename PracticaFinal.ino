@@ -3,6 +3,7 @@
 #include "SonidoManager.h"
 #include "MovimientoManager.h"
 #include "BLEManager.h"
+#include "WebManager.h"
 
 #define PIN_KEY         7
 #define PIN_BUSY        6
@@ -18,10 +19,11 @@
 bool reanudarReposo = false;
 
 ColorSable        colorSable;
-SableLED          sable(PIN_STRIP, 80, 28);
+SableLED          sable(PIN_STRIP, 320, 2);
 SonidoManager     sonido(Serial1, PIN_BUSY);
 MovimientoManager imu(PIN_SDA, PIN_SCL);
 BLEManager        ble;
+WebManager        web;
 
 bool btnOnAnterior    = HIGH;
 bool btnColorAnterior = HIGH;
@@ -38,10 +40,10 @@ void setup() {
   digitalWrite(PIN_KEY,  HIGH);
 
 
-  Serial1.begin(9600, SERIAL_8N1, PIN_DF_RX, PIN_DF_TX);
-  delay(2000);
-  sonido.begin(25);
-  delay(1000);
+//  Serial1.begin(9600, SERIAL_8N1, PIN_DF_RX, PIN_DF_TX);
+//  delay(2000);
+//  sonido.begin(25);
+//  delay(1000);
 
 
   sable.begin();
@@ -54,7 +56,7 @@ void setup() {
   sonido.reproducirFondo(SND_REPOSO);
   delay(200);
 
-  ble.begin("SableLaser");
+  web.begin();
 }
 
 void loop() {
@@ -72,9 +74,11 @@ void loop() {
     gestionarIMU();
   }
 
-  if (ble.hayColorNuevo()) {
+  web.loop();
+
+  if (web.hayColorNuevo()) {
     uint8_t r, g, b;
-    ble.getRGB(r, g, b);
+    web.getRGB(r, g, b);
     sable.setColor(Adafruit_NeoPixel::Color(r, g, b));
   }
 
@@ -89,7 +93,7 @@ void leerBotones() {
     if (digitalRead(PIN_BTN_ON) == LOW) {
       if (!sable.estaEncendido()) {
         sonido.reproducirForzado(SND_ENCENDIDO);
-        delay(150);
+        delay(200);
         sable.toggleEncendido();
       } else {
         sable.toggleEncendido();
