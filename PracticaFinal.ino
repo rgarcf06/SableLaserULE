@@ -17,7 +17,7 @@
 bool reanudarReposo = false;
 
 ColorSable        colorSable;
-SableLED          sable(PIN_STRIP, 320, 2);
+SableLED          sable(PIN_STRIP, 320, 2, 20);
 SonidoManager     sonido(Serial1, PIN_BUSY);
 MovimientoManager imu(PIN_SDA, PIN_SCL);
 WebManager        web;
@@ -42,7 +42,7 @@ void setup() {
 
   Serial1.begin(9600, SERIAL_8N1, PIN_DF_RX, PIN_DF_TX);
   delay(2000);
-  sonido.begin(25);
+  sonido.begin(15);
   delay(1000);
 
   sable.setColor(colorSable.getColor());

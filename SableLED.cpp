@@ -1,11 +1,15 @@
 #include "SableLED.h"
 
+#define LED_INICIO 10
+#define LED_FIN 310
+
 // ─── Constructor ────────────────────────────────────────────────────────────
-SableLED::SableLED(uint8_t pin, uint16_t numLeds, uint8_t velocidad)
+SableLED::SableLED(uint8_t pin, uint16_t numLeds, uint8_t velocidad, uint8_t offset)
   : _strip(numLeds, pin, NEO_GRB + NEO_KHZ800),
     _color(Adafruit_NeoPixel::Color(0, 0, 255)),
     _velocidad(velocidad),
     _velocidadApagado(velocidad),
+    _offset(offset),
     _encendido(false),
     _animando(false),
     _encendiendose(false),
@@ -40,7 +44,7 @@ bool SableLED::estaEncendido() {
 void SableLED::setColor(uint32_t color) {
   _color = color;
   if (_encendido && !_animando) {
-    _strip.fill(_color);
+    _strip.fill(_color, LED_INICIO);
     _strip.show();
   }
 }
@@ -49,11 +53,11 @@ void SableLED::setColor(uint32_t color) {
 void SableLED::golpe() {
   if (!_encendido) return;
 
-  _enGolpe    = true;
-  _animando   = true;
+  _enGolpe     = true;
+  _animando    = true;
   _tiempoGolpe = millis();
 
-  _strip.fill(Adafruit_NeoPixel::Color(255, 255, 255));
+  _strip.fill(Adafruit_NeoPixel::Color(255, 255, 255), LED_INICIO);
   _strip.setBrightness(200);
   _strip.show();
 }
@@ -61,16 +65,16 @@ void SableLED::golpe() {
 // ─── Update (llamar en cada loop) ───────────────────────────────────────────
 void SableLED::update() {
 
-  // — Resolucion del golpe —
+  // — Resolución del golpe —
   if (_enGolpe) {
     if ((millis() - _tiempoGolpe) > 140) {
       _enGolpe  = false;
       _animando = false;
-      _strip.fill(_color);
+      _strip.fill(_color, LED_INICIO);
       _strip.setBrightness(150);
       _strip.show();
     }
-    return; // mientras dura el golpe no hacemos más
+    return;
   }
 
   // — Animación encendido / apagado —
@@ -80,32 +84,44 @@ void SableLED::update() {
   if ((ahora - _ultimoPaso) < _velocidad) return;
   _ultimoPaso = ahora;
 
-  int mitad = _strip.numPixels() / 2;
-  int paso  = 4; // LEDs por step
+  int ladoIda    = _strip.numPixels() / 2 - LED_INICIO; // 150 LEDs (10→159)
+  int ladoVuelta = _strip.numPixels() / 2;               // 160 LEDs (160→319)
+  int paso       = 4;
 
   if (_encendiendose) {
-    // Encendido: desde el centro hacia los extremos
-    for (int i = 0; i < paso && _pixelActual <= mitad; i++) {
-      _strip.setPixelColor(_pixelActual, _color);
-      _strip.setPixelColor(_strip.numPixels() - 1 - _pixelActual, _color);
+    // Encendido: base→punta, ambos lados llegan a la punta a la vez
+    // La vuelta marca el ritmo (más LEDs), la ida se escala con map()
+    for (int i = 0; i < paso && _pixelActual < ladoVuelta; i++) {
+      // Lado vuelta: 319, 318, 317 ... 160
+      _strip.setPixelColor(LED_FIN - _pixelActual, _color);
+
+      // Lado ida: escalado para llegar a la punta al mismo tiempo
+      int posIda = map(_pixelActual, 0, ladoVuelta - 1, 0, ladoIda - 1);
+      _strip.setPixelColor(LED_INICIO + posIda, _color);
+
       _pixelActual++;
     }
     _strip.show();
 
-    if (_pixelActual > mitad) {
+    if (_pixelActual >= ladoVuelta) {
       _animando = false;
     }
 
   } else {
-    // Apagado: desde los extremos hacia el centro
-    for (int i = 0; i < paso && _pixelActual <= mitad; i++) {
-      _strip.setPixelColor(mitad - _pixelActual, 0);
-      _strip.setPixelColor(_strip.numPixels() - 1 - (mitad - _pixelActual), 0);
+    // Apagado: punta→base, ambos lados salen de la punta a la vez
+    for (int i = 0; i < paso && _pixelActual < ladoVuelta; i++) {
+      // Lado vuelta: 160, 161, 162 ... 319
+      _strip.setPixelColor(_strip.numPixels() / 2 + _pixelActual, 0);
+
+      // Lado ida: escalado
+      int posIda = map(_pixelActual, 0, ladoVuelta - 1, 0, ladoIda - 1);
+      _strip.setPixelColor(_strip.numPixels() / 2 - 1 - posIda, 0);
+
       _pixelActual++;
     }
     _strip.show();
 
-    if (_pixelActual > mitad) {
+    if (_pixelActual >= ladoVuelta) {
       _animando = false;
       _strip.clear();
       _strip.show();
