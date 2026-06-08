@@ -14,18 +14,21 @@ class SableLED {
     void golpe();
     bool estaAnimando();
     void setVelocidadApagado(uint8_t velocidad);
+
   private:
     Adafruit_NeoPixel _strip;
     uint32_t _color;
     uint8_t  _velocidad;
+    uint8_t  _velocidadApagado;
     bool     _encendido;
-    bool     _animando;       // ← NUEVO
-    bool     _encendiendose;  // ← NUEVO
-    int      _pixelActual;    // ← NUEVO
-    uint32_t _ultimoPaso;     // ← NUEVO
-    void encender();
-    void apagar();
-    uint8_t _velocidadApagado;
+    bool     _animando;
+    bool     _encendiendose;
+    int      _pixelActual;
+    uint32_t _ultimoPaso;
+
+    // Estado golpe no bloqueante
+    bool     _enGolpe;
+    uint32_t _tiempoGolpe;
 };
 
 #endif

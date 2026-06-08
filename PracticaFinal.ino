@@ -2,14 +2,12 @@
 #include "SableLED.h"
 #include "SonidoManager.h"
 #include "MovimientoManager.h"
-#include "BLEManager.h"
 #include "WebManager.h"
 
 #define PIN_KEY         7
 #define PIN_BUSY        6
 #define PIN_BTN_ON      3
 #define PIN_BTN_COLOR   4
-#define PIN_TCS_LED     0
 #define PIN_STRIP       10
 #define PIN_DF_RX       20
 #define PIN_DF_TX       21
@@ -22,11 +20,12 @@ ColorSable        colorSable;
 SableLED          sable(PIN_STRIP, 320, 2);
 SonidoManager     sonido(Serial1, PIN_BUSY);
 MovimientoManager imu(PIN_SDA, PIN_SCL);
-BLEManager        ble;
 WebManager        web;
 
-bool btnOnAnterior    = HIGH;
-bool btnColorAnterior = HIGH;
+bool     btnOnAnterior    = HIGH;
+bool     btnColorAnterior = HIGH;
+uint32_t ultimoSwing      = 0;
+#define  COOLDOWN_SWING   800
 
 void leerBotones();
 void gestionarIMU();
@@ -36,25 +35,21 @@ void setup() {
 
   pinMode(PIN_BTN_ON,    INPUT_PULLUP);
   pinMode(PIN_BTN_COLOR, INPUT_PULLUP);
-  pinMode(PIN_KEY,       OUTPUT);
-  digitalWrite(PIN_KEY,  HIGH);
-
-
-//  Serial1.begin(9600, SERIAL_8N1, PIN_DF_RX, PIN_DF_TX);
-//  delay(2000);
-//  sonido.begin(25);
-//  delay(1000);
-
 
   sable.begin();
+  delay(100);
+
+
+  Serial1.begin(9600, SERIAL_8N1, PIN_DF_RX, PIN_DF_TX);
+  delay(2000);
+  sonido.begin(25);
+  delay(1000);
+
   sable.setColor(colorSable.getColor());
 
   if (!imu.begin()) {
     Serial.println("ERROR: IMU no detectada");
   }
-  
-  sonido.reproducirFondo(SND_REPOSO);
-  delay(200);
 
   web.begin();
 }
@@ -81,7 +76,6 @@ void loop() {
     web.getRGB(r, g, b);
     sable.setColor(Adafruit_NeoPixel::Color(r, g, b));
   }
-
 }
 
 void leerBotones() {
@@ -93,7 +87,7 @@ void leerBotones() {
     if (digitalRead(PIN_BTN_ON) == LOW) {
       if (!sable.estaEncendido()) {
         sonido.reproducirForzado(SND_ENCENDIDO);
-        delay(200);
+        delay(600);
         sable.toggleEncendido();
       } else {
         sable.toggleEncendido();
@@ -104,6 +98,7 @@ void leerBotones() {
   btnOnAnterior = btnOn;
 
   if (btnColor == LOW && btnColorAnterior == HIGH) {
+    delay(20);
     if (digitalRead(PIN_BTN_COLOR) == LOW) {
       if (sable.estaEncendido()) {
         colorSable.siguiente();
@@ -125,11 +120,15 @@ void gestionarIMU() {
         sable.golpe();
       }
       break;
+
     case IMU_MOVIMIENTO:
-      sonido.reproducirAdvert(SND_ADVERT_MOVIMIENTO);
+      if ((millis() - ultimoSwing) > COOLDOWN_SWING) {
+        sonido.reproducirAdvert(SND_ADVERT_MOVIMIENTO);
+        ultimoSwing = millis();
+      }
       break;
+
     case IMU_REPOSO:
-      // no hace falta hacer nada, el /mp3 sigue en bucle
       break;
   }
 }

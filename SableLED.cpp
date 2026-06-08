@@ -1,12 +1,20 @@
 #include "SableLED.h"
 
+// ─── Constructor ────────────────────────────────────────────────────────────
 SableLED::SableLED(uint8_t pin, uint16_t numLeds, uint8_t velocidad)
   : _strip(numLeds, pin, NEO_GRB + NEO_KHZ800),
-    _color(Adafruit_NeoPixel::Color(0, 0, 255)), // Azul por defecto
+    _color(Adafruit_NeoPixel::Color(0, 0, 255)),
     _velocidad(velocidad),
     _velocidadApagado(velocidad),
-    _encendido(false) {}
+    _encendido(false),
+    _animando(false),
+    _encendiendose(false),
+    _pixelActual(0),
+    _ultimoPaso(0),
+    _enGolpe(false),
+    _tiempoGolpe(0) {}
 
+// ─── Inicialización ─────────────────────────────────────────────────────────
 void SableLED::begin() {
   _strip.begin();
   _strip.setBrightness(150);
@@ -15,77 +23,57 @@ void SableLED::begin() {
   delay(100);
 }
 
+// ─── Encender / apagar ──────────────────────────────────────────────────────
 void SableLED::toggleEncendido() {
-  _encendido    = !_encendido;
+  _encendido     = !_encendido;
   _encendiendose = _encendido;
-  _animando     = true;
-  _pixelActual  = 0;
-  _ultimoPaso   = millis();
-
+  _animando      = true;
+  _pixelActual   = 0;
+  _ultimoPaso    = millis();
 }
 
 bool SableLED::estaEncendido() {
   return _encendido;
 }
 
+// ─── Color ──────────────────────────────────────────────────────────────────
 void SableLED::setColor(uint32_t color) {
   _color = color;
-  if (_encendido) {
+  if (_encendido && !_animando) {
     _strip.fill(_color);
     _strip.show();
   }
 }
 
-void SableLED::encender() {
-  int mitad = _strip.numPixels() / 2;
-  for (int i = 0; i < mitad; i++) {
-    _strip.setPixelColor(i, _color);
-    _strip.setPixelColor(_strip.numPixels() - 1 - i, _color);
-    _strip.show();
-    delay(_velocidad);
-  }
-  if (_strip.numPixels() % 2 != 0) {
-    _strip.setPixelColor(mitad, _color);
-    _strip.show();
-  }
-}
-
-void SableLED::apagar() {
-  int mitad = _strip.numPixels() / 2;
-  if (_strip.numPixels() % 2 != 0) {
-    _strip.setPixelColor(mitad, 0);
-    _strip.show();
-    delay(_velocidad);
-  }
-  for (int i = mitad - 1; i >= 0; i--) {
-    _strip.setPixelColor(i, 0);
-    _strip.setPixelColor(_strip.numPixels() - 1 - i, 0);
-    _strip.show();
-    delay(_velocidad);
-  }
-}
-
+// ─── Golpe (no bloqueante) ──────────────────────────────────────────────────
 void SableLED::golpe() {
   if (!_encendido) return;
 
-  // Flash blanco
+  _enGolpe    = true;
+  _animando   = true;
+  _tiempoGolpe = millis();
+
   _strip.fill(Adafruit_NeoPixel::Color(255, 255, 255));
-  _strip.setBrightness(255);
-  _strip.show();
-  delay(80);
-
-  // Segundo flash más suave
-  _strip.setBrightness(180);
-  _strip.show();
-  delay(60);
-
-  // Volver al color y brillo original
-  _strip.fill(_color);
-  _strip.setBrightness(150);
+  _strip.setBrightness(200);
   _strip.show();
 }
 
+// ─── Update (llamar en cada loop) ───────────────────────────────────────────
 void SableLED::update() {
+
+  // — Resolucion del golpe —
+  if (_enGolpe) {
+    if ((millis() - _tiempoGolpe) > 140) {
+      _enGolpe  = false;
+      _animando = false;
+      _strip.fill(_color);
+      _strip.setBrightness(150);
+      _strip.show();
+    }
+    return; // mientras dura el golpe no hacemos más
+  }
+
+  // — Animación encendido / apagado —
   if (!_animando) return;
 
   uint32_t ahora = millis();
@@ -93,30 +81,39 @@ void SableLED::update() {
   _ultimoPaso = ahora;
 
   int mitad = _strip.numPixels() / 2;
+  int paso  = 4; // LEDs por step
 
   if (_encendiendose) {
-    int paso = 4; // LEDs por step, sube este número para más velocidad
+    // Encendido: desde el centro hacia los extremos
     for (int i = 0; i < paso && _pixelActual <= mitad; i++) {
       _strip.setPixelColor(_pixelActual, _color);
       _strip.setPixelColor(_strip.numPixels() - 1 - _pixelActual, _color);
       _pixelActual++;
     }
-    _strip.show(); // Una sola llamada por step
-    } else {
+    _strip.show();
+
+    if (_pixelActual > mitad) {
       _animando = false;
     }
-   else {
-      int paso = 4;
-      for (int i = 0; i < paso && _pixelActual <= mitad; i++) {
-        _strip.setPixelColor(mitad - _pixelActual, 0);
-        _strip.setPixelColor(_strip.numPixels() - 1 - (mitad - _pixelActual), 0);
-        _pixelActual++;
-      }
+
+  } else {
+    // Apagado: desde los extremos hacia el centro
+    for (int i = 0; i < paso && _pixelActual <= mitad; i++) {
+      _strip.setPixelColor(mitad - _pixelActual, 0);
+      _strip.setPixelColor(_strip.numPixels() - 1 - (mitad - _pixelActual), 0);
+      _pixelActual++;
+    }
+    _strip.show();
+
+    if (_pixelActual > mitad) {
+      _animando = false;
+      _strip.clear();
       _strip.show();
-      }
-  
+    }
+  }
 }
 
+// ─── Helpers ────────────────────────────────────────────────────────────────
 bool SableLED::estaAnimando() {
   return _animando;
 }

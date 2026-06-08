@@ -1,5 +1,4 @@
 #include "SonidoManager.h"
-#include "SonidoManager.h"
 
 SonidoManager::SonidoManager(HardwareSerial& serial, uint8_t pinBusy)
   : _dfPlayer(serial, nullptr), _pinBusy(pinBusy) {}
