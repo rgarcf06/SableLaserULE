@@ -81,12 +81,15 @@ void SableLED::update() {
   if (!_animando) return;
 
   uint32_t ahora = millis();
-  if ((ahora - _ultimoPaso) < _velocidad) return;
+  
+  uint8_t velocidadActual = _encendiendose ? _velocidad : _velocidadApagado;
+  
+  if ((ahora - _ultimoPaso) < velocidadActual) return;
   _ultimoPaso = ahora;
 
   int ladoIda    = _strip.numPixels() / 2 - LED_INICIO; // 150 LEDs (10→159)
   int ladoVuelta = _strip.numPixels() / 2;               // 160 LEDs (160→319)
-  int paso       = 4;
+  int paso = (millis() % 2 == 0) ? 2 : 3;
 
   if (_encendiendose) {
     // Encendido: base→punta, ambos lados llegan a la punta a la vez
@@ -109,7 +112,9 @@ void SableLED::update() {
 
   } else {
     // Apagado: punta→base, ambos lados salen de la punta a la vez
-    for (int i = 0; i < paso && _pixelActual < ladoVuelta; i++) {
+    int pasoApagado = 3;
+
+    for (int i = 0; i < pasoApagado && _pixelActual < ladoVuelta; i++) {
       // Lado vuelta: 160, 161, 162 ... 319
       _strip.setPixelColor((LED_FIN + LED_INICIO)/2 + _pixelActual, 0);
 

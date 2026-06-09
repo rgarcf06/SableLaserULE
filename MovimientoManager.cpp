@@ -34,9 +34,21 @@ void MovimientoManager::leer() {
   bool accelAlto = (dax > UMBRAL_GOLPE || day > UMBRAL_GOLPE || daz > UMBRAL_GOLPE);
   bool giroAlto  = (abs(gx) > UMBRAL_MOVIMIENTO || abs(gy) > UMBRAL_MOVIMIENTO || abs(gz) > UMBRAL_MOVIMIENTO);
 
-  if      (accelAlto && !giroAlto) _estado = IMU_GOLPE;
-  else if (giroAlto)               _estado = IMU_MOVIMIENTO;
-  else                             _estado = IMU_REPOSO;
+  static uint8_t debonceMovimiento = 0;
+
+  if (giroAlto) {
+    debonceMovimiento++;
+  } else {
+    debonceMovimiento = 0;
+  }
+  
+  if (accelAlto && !giroAlto) {
+    _estado = IMU_GOLPE;
+  } else if (debonceMovimiento > 5) { // Exige que el giro sea alto durante 5 lecturas consecutivas
+    _estado = IMU_MOVIMIENTO;
+  } else {
+    _estado = IMU_REPOSO;
+  }
 
   _accelPrev[0] = ax;
   _accelPrev[1] = ay;

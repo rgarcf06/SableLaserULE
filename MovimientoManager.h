@@ -2,7 +2,7 @@
 #include <DFRobot_BMI160.h>
 #include <Wire.h>
 
-#define UMBRAL_MOVIMIENTO  4000
+#define UMBRAL_MOVIMIENTO  2000
 #define UMBRAL_GOLPE      17000
 
 enum EstadoIMU { IMU_REPOSO, IMU_MOVIMIENTO, IMU_GOLPE };

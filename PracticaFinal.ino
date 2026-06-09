@@ -17,7 +17,7 @@
 bool reanudarReposo = false;
 
 ColorSable        colorSable;
-SableLED          sable(PIN_STRIP, 320, 2, 20);
+SableLED          sable(PIN_STRIP, 320, 10, 20);
 SonidoManager     sonido(Serial1, PIN_BUSY);
 MovimientoManager imu(PIN_SDA, PIN_SCL);
 WebManager        web;
@@ -25,7 +25,7 @@ WebManager        web;
 bool     btnOnAnterior    = HIGH;
 bool     btnColorAnterior = HIGH;
 uint32_t ultimoSwing      = 0;
-#define  COOLDOWN_SWING   800
+#define  COOLDOWN_SWING  1100 
 
 void leerBotones();
 void gestionarIMU();
@@ -44,6 +44,8 @@ void setup() {
   delay(2000);
   sonido.begin(15);
   delay(1000);
+
+  sable.setVelocidadApagado(2);
 
   sable.setColor(colorSable.getColor());
 
@@ -111,17 +113,29 @@ void leerBotones() {
 }
 
 void gestionarIMU() {
+  // 1. BLINDAJE: Si el sable se está encendiendo o apagando, ignoramos la IMU por completo.
+  if (sable.estaAnimando() && !sable.estaEncendido()) { 
+    return; 
+  }
+
   EstadoIMU estado = imu.getEstado();
 
   switch (estado) {
     case IMU_GOLPE:
-      if (!sable.estaAnimando()) {
-        sonido.reproducirAdvert(SND_ADVERT_GOLPE);
-        sable.golpe();
-      }
+      // Volvemos al método nativo de anuncio compatible con tu sistema de archivos
+      sonido.reproducirAdvert(SND_ADVERT_GOLPE);
+      
+      // Forzamos el destello por hardware en la hoja de LEDs inmediatamente
+      sable.golpe(); 
+      
+      // TRUCO DE FIRMWARE: Forzamos la actualización del cooldown del swing 
+      // para que el bucle de movimiento no sature el canal serie tras el impacto
+      ultimoSwing = millis(); 
       break;
 
     case IMU_MOVIMIENTO:
+      // Si el sable está resolviendo la animación física de un golpe anterior, 
+      // bloqueamos el sonido del swing para que no se pisen en el búfer
       if ((millis() - ultimoSwing) > COOLDOWN_SWING) {
         sonido.reproducirAdvert(SND_ADVERT_MOVIMIENTO);
         ultimoSwing = millis();
