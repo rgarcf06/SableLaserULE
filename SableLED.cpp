@@ -142,3 +142,7 @@ bool SableLED::estaAnimando() {
 void SableLED::setVelocidadApagado(uint8_t velocidad) {
   _velocidadApagado = velocidad;
 }
+
+bool SableLED::estaEnGolpe() {
+  return _enGolpe;
+}

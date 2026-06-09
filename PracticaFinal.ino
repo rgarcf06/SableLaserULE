@@ -122,21 +122,24 @@ void gestionarIMU() {
 
   switch (estado) {
     case IMU_GOLPE:
-      // Volvemos al método nativo de anuncio compatible con tu sistema de archivos
-      sonido.reproducirAdvert(SND_ADVERT_GOLPE);
-      
-      // Forzamos el destello por hardware en la hoja de LEDs inmediatamente
-      sable.golpe(); 
-      
-      // TRUCO DE FIRMWARE: Forzamos la actualización del cooldown del swing 
-      // para que el bucle de movimiento no sature el canal serie tras el impacto
-      ultimoSwing = millis(); 
+        if(!sable.estaEnGolpe()) {
+          // Volvemos al método nativo de anuncio compatible con tu sistema de archivos
+          sonido.reproducirAdvert(SND_ADVERT_GOLPE);
+
+          
+          // Forzamos el destello por hardware en la hoja de LEDs inmediatamente
+          sable.golpe(); 
+          
+          // TRUCO DE FIRMWARE: Forzamos la actualización del cooldown del swing 
+          // para que el bucle de movimiento no sature el canal serie tras el impacto
+          ultimoSwing = millis(); 
+        }
       break;
 
     case IMU_MOVIMIENTO:
       // Si el sable está resolviendo la animación física de un golpe anterior, 
       // bloqueamos el sonido del swing para que no se pisen en el búfer
-      if ((millis() - ultimoSwing) > COOLDOWN_SWING) {
+      if (((millis() - ultimoSwing) > COOLDOWN_SWING) && !sable.estaEnGolpe()) {
         sonido.reproducirAdvert(SND_ADVERT_MOVIMIENTO);
         ultimoSwing = millis();
       }

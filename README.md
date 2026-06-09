@@ -8,7 +8,7 @@ Proyecto de sable láser interactivo desarrollado con ESP32-C3 Super Mini. Repro
 
 - Adrián
 - Ana
-- Roberto
+- Roberto García Fernández
 
 ---
 

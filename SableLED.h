@@ -14,6 +14,7 @@ class SableLED {
     void golpe();
     bool estaAnimando();
     void setVelocidadApagado(uint8_t velocidad);
+    bool estaEnGolpe();
 
   private:
     Adafruit_NeoPixel _strip;
