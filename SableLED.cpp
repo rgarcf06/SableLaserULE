@@ -1,7 +1,7 @@
 #include "SableLED.h"
 
-#define LED_INICIO 10
-#define LED_FIN 310
+#define LED_INICIO 0 
+#define LED_FIN 305
 
 // ─── Constructor ────────────────────────────────────────────────────────────
 SableLED::SableLED(uint8_t pin, uint16_t numLeds, uint8_t velocidad, uint8_t offset)
@@ -111,11 +111,11 @@ void SableLED::update() {
     // Apagado: punta→base, ambos lados salen de la punta a la vez
     for (int i = 0; i < paso && _pixelActual < ladoVuelta; i++) {
       // Lado vuelta: 160, 161, 162 ... 319
-      _strip.setPixelColor(_strip.numPixels() / 2 + _pixelActual, 0);
+      _strip.setPixelColor((LED_FIN + LED_INICIO)/2 + _pixelActual, 0);
 
       // Lado ida: escalado
       int posIda = map(_pixelActual, 0, ladoVuelta - 1, 0, ladoIda - 1);
-      _strip.setPixelColor(_strip.numPixels() / 2 - 1 - posIda, 0);
+      _strip.setPixelColor((LED_FIN + LED_INICIO)/2 - 1 - posIda, 0);
 
       _pixelActual++;
     }
