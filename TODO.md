@@ -1,10 +1,10 @@
 # TODO
 
 ## Pendiente
-- [ ] Puede que modificar botones 3d
-- [ ] button2 library
-- [ ] Se puede juntar el modificar el color todo en un solo paquete (sensor, web local, app nativa)
-- [ ] App movil para cambiar el color
+- [NO] Puede que modificar botones 3d
+- [NO] button2 library
+- [NO] Se puede juntar el modificar el color todo en un solo paquete (sensor, web local, app nativa)
+- [NO] App movil para cambiar el color
 
 ## En progreso
 
