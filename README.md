@@ -11,7 +11,7 @@ Proyecto de sable láser interactivo desarrollado con ESP32-C3 Super Mini. Repro
 - Roberto García Fernández
 - Hugo García Velasco
 - Ana Juan Perez
-- Carla María Fernández Hidalgo
+- Carla María Fernández Fidalgo
 - Jhon David Daza Sierra
 - Vicente Amado Rodríguez
 
